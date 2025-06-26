@@ -1,4 +1,9 @@
-fn main() {
+use signalstashrs::application::Application;
 
-    println!("Hello, world!");
+mod config;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    Application::build().await?.run().await?;
+    Ok(())
 }
