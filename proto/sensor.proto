@@ -1,0 +1,18 @@
+syntax = "proto3";
+package sensor;
+
+enum Domain {
+  UNSPECIFIED = 0;
+  SOUND_PRESSURE_LEVEL = 1;
+}
+
+message SensorData {
+  uint64 timestamp = 1;
+  float datum = 2;
+  Domain domain = 3;
+  bytes device_id = 4;
+}
+
+message SensorDataBatch {
+  repeated SensorData samples = 1;
+}
