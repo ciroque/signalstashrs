@@ -11,13 +11,13 @@ pub struct Application {
 
 impl Application {
     pub async fn build() -> anyhow::Result<Self> {
+        let settings = Settings::from_env()?;
+
         tracing_subscriber::fmt()
-            .with_max_level(Level::INFO)
+            .with_max_level(settings.log_level)
             .with_target(false)
             .compact()
             .init();
-
-        let settings = Settings::from_env()?;
 
         let router = Router::new()
             .route("/healthz", get(Self::healthz))

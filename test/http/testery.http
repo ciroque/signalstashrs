@@ -1,0 +1,8 @@
+### GET healthz
+GET http://localhost:20120/healthz
+
+### GET readyz
+GET http://localhost:20120/readyz
+
+### GET startz
+GET http://localhost:20120/startz
