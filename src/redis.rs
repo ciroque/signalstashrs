@@ -22,8 +22,8 @@ impl RedisStore {
 
     pub async fn check_connectivity(&self) -> anyhow::Result<()> {
         let mut conn = self.get_connection_manager().await?;
-        let pong: String = redis::cmd("PING").query_async(&mut conn).await?;
-        if pong == "PONG" {
+        let pong: String = redis::cmd(crate::consts::redis::PING_CMD).query_async(&mut conn).await?;
+        if pong == crate::consts::redis::PONG_CMD {
             Ok(())
         } else {
             Err(anyhow::anyhow!("Unexpected PING response: {}", pong))

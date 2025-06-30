@@ -2,6 +2,8 @@ use std::sync::Arc;
 use axum::{routing::get, Router, extract::State, response::{IntoResponse, Response}};
 use crate::app_state::AppState;
 use crate::error_utils::log_and_response;
+use crate::consts::routes::{HEALTHZ_PATH, READYZ_PATH, STARTZ_PATH};
+use crate::consts::health::{MSG_REDIS_CONNECTIVITY_ERROR};
 
 /// Returns a new `Router` containing endpoints for health-checking and startup synchronization.
 ///
@@ -16,10 +18,9 @@ use crate::error_utils::log_and_response;
 /// starting up.
 pub fn routes(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/healthz", get(healthz))
-        .route("/readyz", get(readyz))
-        .with_state(state)
-        .route("/startz", get(startz))
+        .route(HEALTHZ_PATH, get(healthz))
+        .route(READYZ_PATH, get(readyz)).with_state(state)
+        .route(STARTZ_PATH, get(startz))
 }
 
 /// Returns "ok" if the application is still alive.
@@ -28,7 +29,7 @@ pub fn routes(state: Arc<AppState>) -> Router {
 /// if the application is still alive. The application should return a success response (200) if it is
 /// healthy, and a failure response (500) if it is not.
 async fn healthz() -> &'static str {
-    "ok"
+    crate::consts::messages::OK
 }
 
 /// Returns "ready" if the application is ready to receive traffic.
@@ -40,8 +41,8 @@ async fn healthz() -> &'static str {
 /// External dependencies should be checked before returning "ready".
 async fn readyz(State(state): State<Arc<AppState>>) -> axum::response::Response {
     match state.redis.check_connectivity().await {
-        Ok(()) => "ready".into_response(),
-        Err(e) => log_and_response("Redis connectivity check failed in readyz", e),
+        Ok(()) => crate::consts::messages::READY.into_response(),
+        Err(e) => log_and_response(MSG_REDIS_CONNECTIVITY_ERROR, e),
     }
 }
 
@@ -51,5 +52,5 @@ async fn readyz(State(state): State<Arc<AppState>>) -> axum::response::Response 
 /// successfully. The application should return a success response (200) if it has started,
 /// and a failure response (500) if it has not.
 async fn startz() -> &'static str {
-    "started"
+    crate::consts::messages::STARTED
 }

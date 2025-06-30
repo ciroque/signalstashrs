@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use tracing::Level;
+use crate::consts::env::{DEFAULT_SENSOR_DATUM_PREFIX, ENV_SENSOR_DATUM_PREFIX};
 
 pub struct Settings {
     pub bind_address: String,
@@ -10,17 +11,17 @@ pub struct Settings {
 
 impl Settings {
     pub fn from_env_vars(vars: &HashMap<String, String>) -> Result<Self, anyhow::Error> {
-        let log_level = vars.get("LOG_LEVEL")
+        let log_level = vars.get(crate::consts::env::LOG_LEVEL_ENV_VAR)
             .map(|s| s.as_str())
-            .unwrap_or("INFO")
+            .unwrap_or(crate::consts::env::DEFAULT_LOG_LEVEL)
             .parse()?;
-        let bind_address = vars.get("BIND_ADDRESS")
+        let bind_address = vars.get(crate::consts::env::BIND_ADDRESS_ENV_VAR)
             .cloned()
-            .unwrap_or_else(|| "0.0.0.0:20120".to_string());
-        let redis_url = vars.get("REDIS_URL")
+            .unwrap_or_else(|| crate::consts::env::DEFAULT_BIND_ADDRESS.to_string());
+        let redis_url = vars.get(crate::consts::env::REDIS_URL_ENV_VAR)
             .cloned()
-            .unwrap_or_else(|| "redis://localhost:6379".to_string());
-        let sensor_datum_prefix = vars.get("SENSOR_DATUM_PREFIX").cloned().unwrap_or_else(|| "signalstashrs".to_string());
+            .unwrap_or_else(|| crate::consts::env::DEFAULT_REDIS_URL.to_string());
+        let sensor_datum_prefix = vars.get(ENV_SENSOR_DATUM_PREFIX).cloned().unwrap_or_else(|| DEFAULT_SENSOR_DATUM_PREFIX.to_string());
         Ok(Self { 
             bind_address, 
             log_level, 
@@ -43,7 +44,7 @@ mod tests {
         assert_eq!(settings.bind_address, "0.0.0.0:20120");
         assert_eq!(settings.log_level, Level::INFO);
         assert_eq!(settings.redis_url, "redis://localhost:6379");
-        assert_eq!(settings.sensor_datum_prefix, "signalstashrs");
+        assert_eq!(settings.sensor_datum_prefix, DEFAULT_SENSOR_DATUM_PREFIX);
     }
 
     #[test]
@@ -56,7 +57,7 @@ mod tests {
         assert_eq!(settings.bind_address, "127.0.0.1:12345");
         assert_eq!(settings.log_level, Level::DEBUG);
         assert_eq!(settings.redis_url, "redis://custom:1234");
-        assert_eq!(settings.sensor_datum_prefix, "signalstashrs");
+        assert_eq!(settings.sensor_datum_prefix, DEFAULT_SENSOR_DATUM_PREFIX);
     }
 
     #[test]
@@ -70,7 +71,7 @@ mod tests {
     #[test]
     fn test_sensor_datum_prefix_custom() {
         let mut vars = HashMap::new();
-        vars.insert("SENSOR_DATUM_PREFIX".to_string(), "customprefix".to_string());
+        vars.insert(ENV_SENSOR_DATUM_PREFIX.to_string(), "customprefix".to_string());
         let settings = Settings::from_env_vars(&vars).unwrap();
         assert_eq!(settings.sensor_datum_prefix, "customprefix");
     }

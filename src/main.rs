@@ -1,7 +1,5 @@
 use signalstashrs::application::Application;
 
-mod config;
-
 /// The main entry point for the application.
 ///
 /// This function is marked as `#[tokio::main]`, which means it will be called by

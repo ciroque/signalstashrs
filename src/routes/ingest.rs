@@ -2,17 +2,18 @@ use axum::{routing::post, Router};
 use crate::app_state::AppState;
 use std::sync::Arc;
 use crate::error_utils::log_and_response;
-use chrono::Utc;
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, response::Response, http::Request};
 use crate::sensor::{SensorData, Domain};
-use axum::http::header::CONTENT_TYPE;
 use axum::body::Bytes;
 use prost::Message;
 
+use crate::consts::redis::{REDIS_LABEL_DEVICE_ID, REDIS_LABEL_DOMAIN, REDIS_CMD_TS_ADD, REDIS_LABELS_LABEL};
+use crate::consts::errors::{ERR_DECODE_PROTOBUF, ERR_INVALID_UTF8_DEVICE_ID, ERR_REDIS_CONN, ERR_REDIS_WRITE};
+
 pub fn routes(state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/ingest", post(ingest))
+        .route(crate::consts::routes::INGEST_PATH, post(ingest))
         .with_state(state)
 }
 
@@ -34,20 +35,18 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
     let sensor_data = SensorData::decode(body.as_ref());
     let sensor_data = match sensor_data {
         Ok(msg) => msg,
-        Err(e) => return log_and_response("Failed to decode protobuf in ingest", e),
+        Err(e) => return log_and_response(ERR_DECODE_PROTOBUF, e),
     };
 
     let device_id = match std::str::from_utf8(&sensor_data.device_id) {
         Ok(s) => s.to_owned(),
-        Err(e) => return log_and_response("Invalid UTF-8 in device_id in ingest", e),
+        Err(e) => return log_and_response(ERR_INVALID_UTF8_DEVICE_ID, e),
     };
 
-    let domain: &'static str = match Domain::from_i32(sensor_data.domain) {
-        Some(Domain::SoundPressureLevel) => "SPL",
-        Some(Domain::Unspecified) => "UNSPECIFIED",
-        None => "UNKNOWN",
-    };
-
+    let domain = Domain::from_i32(sensor_data.domain)
+        .map(|d| d.as_str_name())
+        .unwrap_or("UNKNOWN");
+    
     let key = format!("{}:{}:{}", state.sensor_datum_prefix, device_id, domain);
     
     // TODO(steve): PUT THIS BACK
@@ -59,20 +58,20 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
 
     let mut conn = match state.redis.get_connection_manager().await {
         Ok(conn) => conn,
-        Err(e) => return log_and_response("Failed to get Redis connection in ingest", e),
+        Err(e) => return log_and_response(ERR_REDIS_CONN, e),
     };
 
-    let res: redis::RedisResult<()> = redis::cmd("TS.ADD")
+    let res: redis::RedisResult<()> = redis::cmd(REDIS_CMD_TS_ADD)
         .arg(&key)
         .arg(timestamp)
         .arg(datum)
-        .arg("LABELS")
-        .arg("device_id").arg(device_id)
-        .arg("domain").arg(domain)
+        .arg(REDIS_LABELS_LABEL)
+        .arg(REDIS_LABEL_DEVICE_ID).arg(&device_id)
+        .arg(REDIS_LABEL_DOMAIN).arg(domain)
         .query_async(&mut conn)
         .await;
     if let Err(e) = res {
-        return log_and_response("Failed to write to RedisTimeSeries in ingest", e);
+        return log_and_response(ERR_REDIS_WRITE, e);
     }
 
     StatusCode::NO_CONTENT.into_response()
