@@ -1,6 +1,7 @@
-use axum::{routing::get, Router};
+use axum::{Router};
 use std::net::SocketAddr;
-use tracing::{info, Level};
+use tracing::{info};
+use crate::routes;
 
 use crate::config::Settings;
 
@@ -10,6 +11,23 @@ pub struct Application {
 }
 
 impl Application {
+/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+    /// Builds a new instance of `Application`.
+    ///
+    /// This method will return an error if the `Settings` cannot be built from the environment.
+    /// It will also initialize the global tracing subscriber with the configured log level.
+    ///
+    /// After building the settings and initializing the tracing subscriber, it will construct a
+    /// new `Router` instance with the routes from `health` and `ingest` merged into it.
+    ///
+    /// # Errors
+    ///
+    /// This method will return an error if the settings cannot be built from the environment.
+    ///
+    /// # Examples
+    ///
+    /// 
+/* <<<<<<<<<<  165ce97d-5003-4ce2-9acb-ed4b0508ceab  >>>>>>>>>>> */
     pub async fn build() -> anyhow::Result<Self> {
         let settings = Settings::from_env()?;
 
@@ -20,10 +38,9 @@ impl Application {
             .init();
 
         let router = Router::new()
-            .route("/healthz", get(Self::healthz))
-            .route("/readyz", get(Self::readyz))
-            .route("/startz", get(Self::startz));
-
+            .merge(routes::health::routes())
+            .merge(routes::ingest::routes());
+        
         Ok(Self { settings, router })
     }
 
@@ -34,15 +51,5 @@ impl Application {
 
         axum::serve(tcp_listener, self.router).await?;
         Ok(())
-    }
-
-    async fn healthz() -> &'static str {
-        "ok"
-    }
-    async fn readyz() -> &'static str {
-        "ok"
-    }
-    async fn startz() -> &'static str {
-        "ok"
     }
 }

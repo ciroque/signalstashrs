@@ -6,3 +6,12 @@ GET http://localhost:20120/readyz
 
 ### GET startz
 GET http://localhost:20120/startz
+
+
+### POST ingest
+POST http://localhost:20120/ingest
+
+Content-Type: application/x-protobuf
+Content-Length: 0
+
+    
