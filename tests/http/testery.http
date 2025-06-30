@@ -11,7 +11,13 @@ GET http://localhost:20120/startz
 ### POST ingest
 POST http://localhost:20120/ingest
 
-Content-Type: application/x-protobuf
+Content-Type: `application/x-protobuf`
 Content-Length: 0
 
-    
+
+
+### POST ingest (protobuf example)
+POST http://localhost:20120/ingest
+Content-Type: application/x-protobuf
+
+<< ./tests/http/sample_sensor_data.bin
