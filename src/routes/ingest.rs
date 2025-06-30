@@ -48,7 +48,7 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
         None => "UNKNOWN",
     };
 
-    let key = format!("ts:{}:{}", device_id, domain);
+    let key = format!("{}:{}:{}", state.sensor_datum_prefix, device_id, domain);
     
     // TODO(steve): PUT THIS BACK
     // let timestamp = sensor_data.timestamp;

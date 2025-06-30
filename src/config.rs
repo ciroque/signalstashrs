@@ -5,6 +5,7 @@ pub struct Settings {
     pub bind_address: String,
     pub log_level: Level,
     pub redis_url: String,
+    pub sensor_datum_prefix: String,
 }
 
 impl Settings {
@@ -19,7 +20,13 @@ impl Settings {
         let redis_url = vars.get("REDIS_URL")
             .cloned()
             .unwrap_or_else(|| "redis://localhost:6379".to_string());
-        Ok(Self { bind_address, log_level, redis_url })
+        let sensor_datum_prefix = vars.get("SENSOR_DATUM_PREFIX").cloned().unwrap_or_else(|| "signalstashrs".to_string());
+        Ok(Self { 
+            bind_address, 
+            log_level, 
+            redis_url, 
+            sensor_datum_prefix 
+        })
     }
 }
 
@@ -36,6 +43,7 @@ mod tests {
         assert_eq!(settings.bind_address, "0.0.0.0:20120");
         assert_eq!(settings.log_level, Level::INFO);
         assert_eq!(settings.redis_url, "redis://localhost:6379");
+        assert_eq!(settings.sensor_datum_prefix, "signalstashrs");
     }
 
     #[test]
@@ -48,6 +56,7 @@ mod tests {
         assert_eq!(settings.bind_address, "127.0.0.1:12345");
         assert_eq!(settings.log_level, Level::DEBUG);
         assert_eq!(settings.redis_url, "redis://custom:1234");
+        assert_eq!(settings.sensor_datum_prefix, "signalstashrs");
     }
 
     #[test]
@@ -56,5 +65,13 @@ mod tests {
         vars.insert("LOG_LEVEL".to_string(), "INVALID".to_string());
         let result = Settings::from_env_vars(&vars);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_sensor_datum_prefix_custom() {
+        let mut vars = HashMap::new();
+        vars.insert("SENSOR_DATUM_PREFIX".to_string(), "customprefix".to_string());
+        let settings = Settings::from_env_vars(&vars).unwrap();
+        assert_eq!(settings.sensor_datum_prefix, "customprefix");
     }
 }

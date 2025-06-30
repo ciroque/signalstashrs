@@ -41,8 +41,10 @@ impl Application {
 
         let redis = RedisStore::new(&settings.redis_url).await?;
 
+        let sensor_datum_prefix = settings.sensor_datum_prefix.clone();
         let state = Arc::new(AppState {
             redis: Arc::new(redis),
+            sensor_datum_prefix,
         });
         
         let router = Router::new()

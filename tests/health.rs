@@ -9,7 +9,7 @@ use signalstashrs::redis::RedisStore;
 
 async fn test_app_state() -> Arc<AppState> {
     let redis = RedisStore::new("redis://localhost:6379").await.unwrap();
-    Arc::new(AppState { redis: Arc::new(redis) })
+    Arc::new(AppState { sensor_datum_prefix: "test-prefix".to_string(), redis: Arc::new(redis) })
 }
 
 #[tokio::test]
