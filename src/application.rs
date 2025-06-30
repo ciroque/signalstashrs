@@ -11,7 +11,6 @@ pub struct Application {
 }
 
 impl Application {
-/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
     /// Builds a new instance of `Application`.
     ///
     /// This method will return an error if the `Settings` cannot be built from the environment.
@@ -26,10 +25,10 @@ impl Application {
     ///
     /// # Examples
     ///
-    /// 
-/* <<<<<<<<<<  165ce97d-5003-4ce2-9acb-ed4b0508ceab  >>>>>>>>>>> */
+    ///
     pub async fn build() -> anyhow::Result<Self> {
-        let settings = Settings::from_env()?;
+        let env = std::env::vars().collect();
+        let settings = Settings::from_env_vars(&env)?;
 
         tracing_subscriber::fmt()
             .with_max_level(settings.log_level)
