@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use axum::{routing::get, Router, extract::State, response::{IntoResponse, Response}};
 use crate::app_state::AppState;
-use uuid::Uuid;
-use tracing::error;
+use crate::error_utils::log_and_response;
+
 /// Returns a new `Router` containing endpoints for health-checking and startup synchronization.
 ///
 /// This includes:
@@ -41,14 +41,7 @@ async fn healthz() -> &'static str {
 async fn readyz(State(state): State<Arc<AppState>>) -> axum::response::Response {
     match state.redis.check_connectivity().await {
         Ok(()) => "ready".into_response(),
-        Err(e) => {
-            let correlation_id = Uuid::new_v4();
-            error!(correlation_id = %correlation_id, error = %e, "Redis connectivity check failed in readyz");
-            (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                format!("could not connect to redis (correlation id: {correlation_id})")
-            ).into_response()
-        }
+        Err(e) => log_and_response("Redis connectivity check failed in readyz", e),
     }
 }
 
