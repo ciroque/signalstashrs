@@ -20,4 +20,4 @@ Content-Length: 0
 POST http://localhost:20120/ingest
 Content-Type: application/x-protobuf
 
-<< ./tests/http/sample_sensor_data.bin
+< ./sample_sensor_data.bin
