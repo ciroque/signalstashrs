@@ -23,10 +23,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/signalstashrs:${{ github.sha }} .
+          docker build -t ghcr.io/${{ github.actor }}/signalstashrs:${{ github.sha }} .
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository }}/signalstashrs:${{ github.sha }}
+          docker push ghcr.io/${{ github.actor }}/signalstashrs:${{ github.sha }}
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.4.0
       - name: Sign Docker image with Cosign (keyless)
