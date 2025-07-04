@@ -1,10 +1,10 @@
-use axum::{Router};
+use crate::app_state::AppState;
+use crate::redis::RedisStore;
+use crate::routes;
+use axum::Router;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tracing::{info};
-use crate::routes;
-use crate::redis::RedisStore;
-use crate::app_state::AppState;
+use tracing::info;
 
 use crate::config::Settings;
 
@@ -46,11 +46,11 @@ impl Application {
             redis: Arc::new(redis),
             sensor_datum_prefix,
         });
-        
+
         let router = Router::new()
             .merge(routes::health::routes(state.clone()))
             .merge(routes::ingest::routes(state.clone()));
-        
+
         Ok(Self { settings, router })
     }
 

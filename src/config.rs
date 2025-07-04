@@ -1,6 +1,6 @@
+use crate::consts::env::{DEFAULT_SENSOR_DATUM_PREFIX, ENV_SENSOR_DATUM_PREFIX};
 use std::collections::HashMap;
 use tracing::Level;
-use crate::consts::env::{DEFAULT_SENSOR_DATUM_PREFIX, ENV_SENSOR_DATUM_PREFIX};
 
 pub struct Settings {
     pub bind_address: String,
@@ -11,22 +11,28 @@ pub struct Settings {
 
 impl Settings {
     pub fn from_env_vars(vars: &HashMap<String, String>) -> Result<Self, anyhow::Error> {
-        let log_level = vars.get(crate::consts::env::LOG_LEVEL_ENV_VAR)
+        let log_level = vars
+            .get(crate::consts::env::LOG_LEVEL_ENV_VAR)
             .map(|s| s.as_str())
             .unwrap_or(crate::consts::env::DEFAULT_LOG_LEVEL)
             .parse()?;
-        let bind_address = vars.get(crate::consts::env::BIND_ADDRESS_ENV_VAR)
+        let bind_address = vars
+            .get(crate::consts::env::BIND_ADDRESS_ENV_VAR)
             .cloned()
             .unwrap_or_else(|| crate::consts::env::DEFAULT_BIND_ADDRESS.to_string());
-        let redis_url = vars.get(crate::consts::env::REDIS_URL_ENV_VAR)
+        let redis_url = vars
+            .get(crate::consts::env::REDIS_URL_ENV_VAR)
             .cloned()
             .unwrap_or_else(|| crate::consts::env::DEFAULT_REDIS_URL.to_string());
-        let sensor_datum_prefix = vars.get(ENV_SENSOR_DATUM_PREFIX).cloned().unwrap_or_else(|| DEFAULT_SENSOR_DATUM_PREFIX.to_string());
-        Ok(Self { 
-            bind_address, 
-            log_level, 
-            redis_url, 
-            sensor_datum_prefix 
+        let sensor_datum_prefix = vars
+            .get(ENV_SENSOR_DATUM_PREFIX)
+            .cloned()
+            .unwrap_or_else(|| DEFAULT_SENSOR_DATUM_PREFIX.to_string());
+        Ok(Self {
+            bind_address,
+            log_level,
+            redis_url,
+            sensor_datum_prefix,
         })
     }
 }
@@ -71,7 +77,10 @@ mod tests {
     #[test]
     fn test_sensor_datum_prefix_custom() {
         let mut vars = HashMap::new();
-        vars.insert(ENV_SENSOR_DATUM_PREFIX.to_string(), "customprefix".to_string());
+        vars.insert(
+            ENV_SENSOR_DATUM_PREFIX.to_string(),
+            "customprefix".to_string(),
+        );
         let settings = Settings::from_env_vars(&vars).unwrap();
         assert_eq!(settings.sensor_datum_prefix, "customprefix");
     }

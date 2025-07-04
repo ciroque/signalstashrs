@@ -1,15 +1,21 @@
-use axum::{routing::post, Router};
 use crate::app_state::AppState;
-use std::sync::Arc;
 use crate::error_utils::log_and_response;
+use axum::{Router, routing::post};
+use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, response::Response, http::Request};
-use crate::sensor::{SensorData, Domain};
+use crate::sensor::{Domain, SensorData};
 use axum::body::Bytes;
+use axum::{
+    extract::State, http::Request, http::StatusCode, response::IntoResponse, response::Response,
+};
 use prost::Message;
 
-use crate::consts::redis::{REDIS_LABEL_DEVICE_ID, REDIS_LABEL_DOMAIN, REDIS_CMD_TS_ADD, REDIS_LABELS_LABEL};
-use crate::consts::errors::{ERR_DECODE_PROTOBUF, ERR_INVALID_UTF8_DEVICE_ID, ERR_REDIS_CONN, ERR_REDIS_WRITE};
+use crate::consts::errors::{
+    ERR_DECODE_PROTOBUF, ERR_INVALID_UTF8_DEVICE_ID, ERR_REDIS_CONN, ERR_REDIS_WRITE,
+};
+use crate::consts::redis::{
+    REDIS_CMD_TS_ADD, REDIS_LABEL_DEVICE_ID, REDIS_LABEL_DOMAIN, REDIS_LABELS_LABEL,
+};
 
 pub fn routes(state: Arc<AppState>) -> Router {
     Router::new()
@@ -28,9 +34,9 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
     // Handler signature update:
     // async fn ingest(State(state): State<Arc<AppState>>, req: Request<Body>, body: Bytes) -> Response
     // For now, let's just add the import for Request and leave a note for the next step.
-    
+
     tracing::debug!("Received {} bytes", body.len());
-    
+
     // Parse protobuf body
     let sensor_data = SensorData::decode(body.as_ref());
     let sensor_data = match sensor_data {
@@ -46,14 +52,13 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
     let domain = Domain::from_i32(sensor_data.domain)
         .map(|d| d.as_str_name())
         .unwrap_or("UNKNOWN");
-    
+
     let key = format!("{}:{}:{}", state.sensor_datum_prefix, device_id, domain);
-    
+
     // TODO(steve): PUT THIS BACK
     // let timestamp = sensor_data.timestamp;
     let timestamp = chrono::Utc::now().timestamp();
-    
-    
+
     let datum = sensor_data.datum;
 
     let mut conn = match state.redis.get_connection_manager().await {
@@ -66,8 +71,10 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
         .arg(timestamp)
         .arg(datum)
         .arg(REDIS_LABELS_LABEL)
-        .arg(REDIS_LABEL_DEVICE_ID).arg(&device_id)
-        .arg(REDIS_LABEL_DOMAIN).arg(domain)
+        .arg(REDIS_LABEL_DEVICE_ID)
+        .arg(&device_id)
+        .arg(REDIS_LABEL_DOMAIN)
+        .arg(domain)
         .query_async(&mut conn)
         .await;
     if let Err(e) = res {

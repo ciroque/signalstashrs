@@ -2,15 +2,19 @@ use axum::{
     body::{Body, to_bytes},
     http::{Request, StatusCode},
 };
-use tower::util::ServiceExt; 
-use std::sync::Arc;
 use signalstashrs::app_state::AppState;
 use signalstashrs::redis::RedisStore;
+use std::sync::Arc;
+use tower::util::ServiceExt;
 
 async fn test_app_state() -> Arc<AppState> {
-    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
+    let redis_url =
+        std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
     let redis = RedisStore::new(&redis_url).await.unwrap();
-    Arc::new(AppState { sensor_datum_prefix: "test-prefix".to_string(), redis: Arc::new(redis) })
+    Arc::new(AppState {
+        sensor_datum_prefix: "test-prefix".to_string(),
+        redis: Arc::new(redis),
+    })
 }
 
 #[tokio::test]

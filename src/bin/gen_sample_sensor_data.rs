@@ -1,5 +1,5 @@
-use signalstashrs::sensor::{SensorData, Domain};
 use prost::Message;
+use signalstashrs::sensor::{Domain, SensorData};
 use std::fs::File;
 use std::io::Write;
 
