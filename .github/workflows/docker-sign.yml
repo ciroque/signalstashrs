@@ -41,7 +41,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ github.actor }}/signalstashrs:latest,ghcr.io/signalstashrs:${{github.sha}}
+          tags: ghcr.io/${{ github.actor }}/signalstashrs:latest,ghcr.io/${{ github.actor }}/signalstashrs:${{github.sha}}
       - name: Sign Docker image with Cosign (keyless)
         run: |
           cosign sign --yes ghcr.io/${{ github.actor }}/signalstashrs:${{ steps.docker-build-and-push.outputs.digest }}
