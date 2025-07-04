@@ -8,7 +8,8 @@ use signalstashrs::app_state::AppState;
 use signalstashrs::redis::RedisStore;
 
 async fn test_app_state() -> Arc<AppState> {
-    let redis = RedisStore::new("redis://localhost:6379").await.unwrap();
+    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
+    let redis = RedisStore::new(&redis_url).await.unwrap();
     Arc::new(AppState { sensor_datum_prefix: "test-prefix".to_string(), redis: Arc::new(redis) })
 }
 
