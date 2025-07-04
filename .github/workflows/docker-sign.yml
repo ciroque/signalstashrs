@@ -46,7 +46,6 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ghcr.io/${{ github.actor }}/signalstashrs:${{ github.sha }}
-
       - name: Sign Docker image with Cosign (keyless)
         run: |
 #          cosign sign --yes ghcr.io/${{ github.actor }}/signalstashrs:${{ github.sha }}
