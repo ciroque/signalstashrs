@@ -2,12 +2,7 @@ use crate::app_state::AppState;
 use crate::consts::health::MSG_REDIS_CONNECTIVITY_ERROR;
 use crate::consts::routes::{HEALTHZ_PATH, READYZ_PATH, STARTZ_PATH};
 use crate::error_utils::log_and_response;
-use axum::{
-    Router,
-    extract::State,
-    response::{IntoResponse, Response},
-    routing::get,
-};
+use axum::{Router, extract::State, response::IntoResponse, routing::get};
 use std::sync::Arc;
 
 /// Returns a new `Router` containing endpoints for health-checking and startup synchronization.

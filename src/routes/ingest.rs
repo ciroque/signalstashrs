@@ -1,14 +1,12 @@
 use crate::app_state::AppState;
 use crate::error_utils::log_and_response;
-use axum::{Router, routing::post};
-use std::sync::Arc;
-
 use crate::sensor::{Domain, SensorData};
 use axum::body::Bytes;
-use axum::{
-    extract::State, http::Request, http::StatusCode, response::IntoResponse, response::Response,
-};
+use axum::{Router, routing::post};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, response::Response};
 use prost::Message;
+use std::convert::TryFrom;
+use std::sync::Arc;
 
 use crate::consts::errors::{
     ERR_DECODE_PROTOBUF, ERR_INVALID_UTF8_DEVICE_ID, ERR_REDIS_CONN, ERR_REDIS_WRITE,
@@ -49,7 +47,7 @@ async fn ingest(State(state): State<Arc<AppState>>, body: Bytes) -> Response {
         Err(e) => return log_and_response(ERR_INVALID_UTF8_DEVICE_ID, e),
     };
 
-    let domain = Domain::from_i32(sensor_data.domain)
+    let domain = Domain::try_from(sensor_data.domain)
         .map(|d| d.as_str_name())
         .unwrap_or("UNKNOWN");
 

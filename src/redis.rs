@@ -1,5 +1,5 @@
 use redis::Client;
-use redis::aio::{ConnectionManager, MultiplexedConnection};
+use redis::aio::MultiplexedConnection;
 use std::sync::Arc;
 
 #[derive(Clone)]
