@@ -23,8 +23,8 @@ jobs:
       - name: Install protoc
         run: apt-get update && apt-get install -y protobuf-compiler
 
-      - name: Install rustfmt
-        run: rustup component add rustfmt
+      - name: Install components
+        run: rustup component add rustfmt clippy
 
       - name: Build
         run: cargo build --release --all-targets
