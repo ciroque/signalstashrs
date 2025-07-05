@@ -3,6 +3,8 @@ name: Build and Sign Docker Image
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -38,8 +40,10 @@ jobs:
           tags: |
             ghcr.io/${{ github.actor }}/signalstashrs:latest
             ghcr.io/${{ github.actor }}/signalstashrs:${{ github.sha }}
+            ghcr.io/${{ github.actor }}/signalstashrs:${{ github.ref_name }}
 
       - name: Sign Docker image with Cosign (keyless)
         run: |
           cosign sign --yes ghcr.io/${{ github.actor }}/signalstashrs:latest
           cosign sign --yes ghcr.io/${{ github.actor }}/signalstashrs:${{ github.sha }}
+          cosign sign --yes ghcr.io/${{ github.actor }}/signalstashrs:${{ github.ref_name }}
