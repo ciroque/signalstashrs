@@ -136,3 +136,9 @@ affinity: {}
 
 redis:
   url: "redis://redis-sem-mem-demo.redis-semantic.svc.cluster.local:6379"
+
+middleware:
+  rateLimit:
+    enabled: true
+    average: 100
+    burst: 50

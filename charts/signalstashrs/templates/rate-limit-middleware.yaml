@@ -1,0 +1,11 @@
+{{- if .Values.middleware.rateLimit.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "signalstashrs.fullname" . }}-rate-limit
+  namespace: {{ .Release.Namespace }}
+spec:
+  rateLimit:
+    average: {{ .Values.middleware.rateLimit.average }}
+    burst: {{ .Values.middleware.rateLimit.burst }}
+{{- end }}
