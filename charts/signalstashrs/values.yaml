@@ -73,8 +73,8 @@ ingress:
           pathType: Prefix
   tls:
     - hosts:
-        - tz.atavachron.xyz
-      secretName: tzls-tls-secret
+        - signalstashrs.atavachron.xyz
+      secretName: signalstashrs-tls-secret
 
 certificate:
   enabled: true
