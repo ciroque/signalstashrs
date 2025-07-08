@@ -49,6 +49,12 @@ impl Application {
             sensor_datum_prefix,
         });
 
+        // Bootstrap admin key if none exists
+        if let Err(e) = auth::bootstrap_admin_key(state.clone()).await {
+            info!("Failed to bootstrap admin API key: {:?}", e);
+            // Continue application startup even if bootstrap fails
+        }
+
         let router = Router::new()
             .merge(routes::health::routes(state.clone()))
             .merge(routes::ingest::routes(state.clone())

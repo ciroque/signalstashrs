@@ -159,14 +159,14 @@ pub async fn bootstrap_admin_key(state: Arc<AppState>) -> Result<(bool, Option<S
         let admin_key = create_admin_api_key(state).await?;
         
         // Log the key prominently
-        warn!("╔════════════════════════════════════════════════════════════════════════════════╗");
-        warn!("║                         INITIAL ADMIN API KEY GENERATED                         ║");
-        warn!("╠════════════════════════════════════════════════════════════════════════════════╣");
-        warn!("║ Use the following key to access the API key management endpoints:               ║");
-        warn!("║ Authorization: {} {}                     ║", AUTH_SCHEME, admin_key);
-        warn!("║                                                                                ║");
-        warn!("║ IMPORTANT: Store this key securely! It will not be shown again.                ║");
-        warn!("╚════════════════════════════════════════════════════════════════════════════════╝");
+        warn!("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗");
+        warn!("║                                              INITIAL ADMIN API KEY GENERATED                                              ║");
+        warn!("╠══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣");
+        warn!("║ Use the following key to access the API key management endpoints:                                                         ║");
+        warn!("║ Authorization: {} {}                                                      ║", AUTH_SCHEME, admin_key);
+        warn!("║                                                                                                                           ║");
+        warn!("║ IMPORTANT: Store this key securely! It will not be shown again.                                                           ║");
+        warn!("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝");
         
         Ok((true, Some(admin_key)))
     } else {
