@@ -19,5 +19,24 @@ Content-Length: 0
 ### POST ingest (protobuf example)
 POST http://localhost:20120/ingest
 Content-Type: application/x-protobuf
+X-Api-Key: sk-sigstash-Opq9PmfC64D54WRvbLQvmDZnICNaYlEM0FKYJoCf3sRXvavfFijq6uPf-g4fS9RR
 
 < ./sample_sensor_data.bin
+
+
+### List Keys
+GET http://localhost:20120/api/keys
+
+
+### Create Key
+POST http://localhost:20120/api/keys
+Content-Type: application/json
+
+{
+    "user_id": "ciroque-admin"
+}
+
+### Revoke Key
+DELETE http://localhost:20120/api/keys/sk-sigstash-4F6zIat-Hz60E_KYmTjZyS1imJ8DYmCDZBaSGWeXoYDsEU7Xgd7Owgvgjtgr5e0q
+#DELETE http://localhost:20120/api/keys/{{api-key-uuid}}
+# Replace {{api-key-uuid}} with the actual UUID returned from the Create Key endpoint

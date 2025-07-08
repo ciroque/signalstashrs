@@ -1,7 +1,9 @@
 use crate::app_state::AppState;
 use crate::redis::RedisStore;
 use crate::routes;
+use crate::auth;
 use axum::Router;
+use axum::middleware;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing::info;
@@ -49,7 +51,9 @@ impl Application {
 
         let router = Router::new()
             .merge(routes::health::routes(state.clone()))
-            .merge(routes::ingest::routes(state.clone()));
+            .merge(routes::ingest::routes(state.clone())
+                  .layer(middleware::from_fn_with_state(state.clone(), auth::validate_api_key)))
+            .merge(routes::apikeys::routes(state.clone()));
 
         Ok(Self { settings, router })
     }
