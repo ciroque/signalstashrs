@@ -53,7 +53,8 @@ impl Application {
             .merge(routes::health::routes(state.clone()))
             .merge(routes::ingest::routes(state.clone())
                   .layer(middleware::from_fn_with_state(state.clone(), auth::validate_api_key)))
-            .merge(routes::apikeys::routes(state.clone()));
+            .merge(routes::apikeys::routes(state.clone())
+                  .layer(middleware::from_fn_with_state(state.clone(), auth::validate_admin_api_key)));
 
         Ok(Self { settings, router })
     }
