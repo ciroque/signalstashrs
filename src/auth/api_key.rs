@@ -31,7 +31,7 @@ fn extract_api_key_from_header(req: &Request<Body>) -> Result<&str, StatusCode> 
     };
 
     // Parse the header value to extract the API key
-    match auth_header.strip_prefix(&format!("{} ", AUTH_SCHEME)) {
+    match auth_header.strip_prefix(&format!("{AUTH_SCHEME} ")) {
         Some(key) => Ok(key),
         None => Err(StatusCode::UNAUTHORIZED),
     }
@@ -53,7 +53,7 @@ pub async fn validate_api_key(
 
     // Check if API key exists in Redis
     let key_exists: bool = conn
-        .exists(format!("{}{}", API_KEY_PREFIX, api_key))
+        .exists(format!("{API_KEY_PREFIX}{api_key}"))
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
@@ -80,7 +80,7 @@ pub async fn validate_admin_api_key(
 
     // Check if Admin API key exists in Redis
     let key_exists: bool = conn
-        .exists(format!("{}{}", API_ADMIN_KEY_PREFIX, api_key))
+        .exists(format!("{API_ADMIN_KEY_PREFIX}{api_key}"))
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
@@ -98,10 +98,10 @@ pub fn generate_api_key(prefix: &str) -> String {
     rng.fill_bytes(&mut random_bytes);
 
     // Encode as base64 and remove padding characters
-    let random_part = base64::encode_config(&random_bytes, base64::URL_SAFE_NO_PAD);
+    let random_part = base64::encode_config(random_bytes, base64::URL_SAFE_NO_PAD);
 
     // Combine prefix and random data
-    format!("{}{}", prefix, random_part)
+    format!("{prefix}{random_part}")
 }
 
 /// Creates a new admin API key and stores it in Redis
@@ -117,7 +117,7 @@ pub async fn create_admin_api_key(state: Arc<AppState>) -> Result<String, Status
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Store admin key with "admin" as the value
-    let redis_key = format!("{}{}", API_ADMIN_KEY_PREFIX, admin_key);
+    let redis_key = format!("{API_ADMIN_KEY_PREFIX}{admin_key}");
     conn.set::<_, _, ()>(&redis_key, "admin")
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

@@ -47,7 +47,7 @@ async fn create_key(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Store API key with user ID as value
-    let redis_key = format!("{}{}", API_KEY_PREFIX, key);
+    let redis_key = format!("{API_KEY_PREFIX}{key}");
     conn.set::<_, _, ()>(&redis_key, &payload.user_id)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -81,7 +81,7 @@ async fn list_keys(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ApiKey
 
     // For each key, get the associated user ID
     for key in keys {
-        let redis_key = format!("{}{}", API_KEY_PREFIX, key);
+        let redis_key = format!("{API_KEY_PREFIX}{key}");
         let user_id: String = conn
             .get(&redis_key)
             .await
@@ -105,7 +105,7 @@ async fn revoke_key(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Remove the API key
-    let redis_key = format!("{}{}", API_KEY_PREFIX, key);
+    let redis_key = format!("{API_KEY_PREFIX}{key}");
     let exists: bool = conn
         .exists(&redis_key)
         .await
