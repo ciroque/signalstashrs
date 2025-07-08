@@ -38,7 +38,7 @@ async fn create_key(
     Json(payload): Json<CreateApiKeyRequest>,
 ) -> Result<Json<ApiKey>, StatusCode> {
     // Generate a new API key with our custom format
-    let key = crate::auth::generate_api_key();
+    let key = crate::auth::api_key::generate_api_key(crate::auth::api_key::API_KEY_FORMAT_PREFIX);
     
     // Get Redis connection
     let mut conn = state
