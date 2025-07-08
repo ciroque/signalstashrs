@@ -4,8 +4,6 @@ use axum::{
     routing::{delete, get, post},
     Json, Router,
 };
-use base64;
-use rand::RngCore;
 use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -14,7 +12,6 @@ use crate::app_state::AppState;
 
 const API_KEY_PREFIX: &str = "api_key:";
 const ALL_API_KEYS: &str = "all_api_keys";
-const API_KEY_FORMAT_PREFIX: &str = "sk-sigstash-";
 
 #[derive(Serialize)]
 struct ApiKey {
@@ -35,25 +32,13 @@ pub fn routes(state: Arc<AppState>) -> Router {
         .with_state(state)
 }
 
-/// Generates a secure API key with the format "sk-sigstash-{base64-encoded-random-data}"
-fn generate_api_key() -> String {
-    let mut rng = rand::thread_rng();
-    let mut random_bytes = [0u8; 48]; // 384 bits of entropy
-    rng.fill_bytes(&mut random_bytes);
-    
-    // Encode as base64 and remove padding characters
-    let random_part = base64::encode_config(&random_bytes, base64::URL_SAFE_NO_PAD);
-    
-    // Combine prefix and random data
-    format!("{}{}", API_KEY_FORMAT_PREFIX, random_part)
-}
 
 async fn create_key(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateApiKeyRequest>,
 ) -> Result<Json<ApiKey>, StatusCode> {
     // Generate a new API key with our custom format
-    let key = generate_api_key();
+    let key = crate::auth::generate_api_key();
     
     // Get Redis connection
     let mut conn = state

@@ -7,6 +7,7 @@ use axum::{
 };
 use redis::AsyncCommands;
 use std::sync::Arc;
+use rand::RngCore;
 
 use crate::app_state::AppState;
 
@@ -14,6 +15,8 @@ pub const AUTH_HEADER: &str = "Authorization";
 pub const AUTH_SCHEME: &str = "SignalStash";
 pub const API_KEY_PREFIX: &str = "api_key:";
 pub const API_ADMIN_KEY_PREFIX: &str = "api_admin_key:";
+
+const API_KEY_FORMAT_PREFIX: &str = "sk-sigstash-";
 
 /// Extract API key from the Authorization header
 /// Format should be: "SignalStash {key}"
@@ -83,4 +86,17 @@ pub async fn validate_admin_api_key(
     } else {
         Err(StatusCode::UNAUTHORIZED)
     }
+}
+
+/// Generates a secure API key with the format "sk-sigstash-{base64-encoded-random-data}"
+pub fn generate_api_key() -> String {
+    let mut rng = rand::thread_rng();
+    let mut random_bytes = [0u8; 48]; // 384 bits of entropy
+    rng.fill_bytes(&mut random_bytes);
+
+    // Encode as base64 and remove padding characters
+    let random_part = base64::encode_config(&random_bytes, base64::URL_SAFE_NO_PAD);
+
+    // Combine prefix and random data
+    format!("{}{}", API_KEY_FORMAT_PREFIX, random_part)
 }
