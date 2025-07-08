@@ -1,7 +1,7 @@
 use crate::app_state::AppState;
+use crate::auth;
 use crate::redis::RedisStore;
 use crate::routes;
-use crate::auth;
 use axum::Router;
 use axum::middleware;
 use std::net::SocketAddr;
@@ -55,12 +55,18 @@ impl Application {
             // Continue application startup even if bootstrap fails
         }
 
-        let router = Router::new()
-            .merge(routes::health::routes(state.clone()))
-            .merge(routes::ingest::routes(state.clone())
-                  .layer(middleware::from_fn_with_state(state.clone(), auth::validate_api_key)))
-            .merge(routes::apikeys::routes(state.clone())
-                  .layer(middleware::from_fn_with_state(state.clone(), auth::validate_admin_api_key)));
+        let router =
+            Router::new()
+                .merge(routes::health::routes(state.clone()))
+                .merge(
+                    routes::ingest::routes(state.clone()).layer(middleware::from_fn_with_state(
+                        state.clone(),
+                        auth::validate_api_key,
+                    )),
+                )
+                .merge(routes::apikeys::routes(state.clone()).layer(
+                    middleware::from_fn_with_state(state.clone(), auth::validate_admin_api_key),
+                ));
 
         Ok(Self { settings, router })
     }

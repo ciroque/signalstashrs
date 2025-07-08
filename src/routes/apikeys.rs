@@ -1,8 +1,8 @@
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{delete, get, post},
-    Json, Router,
 };
 use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
@@ -32,14 +32,13 @@ pub fn routes(state: Arc<AppState>) -> Router {
         .with_state(state)
 }
 
-
 async fn create_key(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateApiKeyRequest>,
 ) -> Result<Json<ApiKey>, StatusCode> {
     // Generate a new API key with our custom format
     let key = crate::auth::api_key::generate_api_key(crate::auth::api_key::API_KEY_FORMAT_PREFIX);
-    
+
     // Get Redis connection
     let mut conn = state
         .redis
@@ -52,7 +51,7 @@ async fn create_key(
     conn.set::<_, _, ()>(&redis_key, &payload.user_id)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     // Add to set of all API keys for tracking
     conn.sadd::<_, _, ()>(ALL_API_KEYS, &key)
         .await
@@ -64,9 +63,7 @@ async fn create_key(
     }))
 }
 
-async fn list_keys(
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<Vec<ApiKey>>, StatusCode> {
+async fn list_keys(State(state): State<Arc<AppState>>) -> Result<Json<Vec<ApiKey>>, StatusCode> {
     // Get Redis connection
     let mut conn = state
         .redis
@@ -81,7 +78,7 @@ async fn list_keys(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let mut api_keys = Vec::new();
-    
+
     // For each key, get the associated user ID
     for key in keys {
         let redis_key = format!("{}{}", API_KEY_PREFIX, key);
@@ -89,7 +86,7 @@ async fn list_keys(
             .get(&redis_key)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-            
+
         api_keys.push(ApiKey { key, user_id });
     }
 
@@ -122,7 +119,7 @@ async fn revoke_key(
     conn.del::<_, ()>(&redis_key)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     // Remove from set of all API keys
     conn.srem::<_, _, ()>(ALL_API_KEYS, &key)
         .await

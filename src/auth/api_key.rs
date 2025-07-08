@@ -1,13 +1,13 @@
 use axum::{
+    body::Body,
     extract::State,
     http::{Request, StatusCode},
     middleware::Next,
     response::Response,
-    body::Body,
 };
+use rand::RngCore;
 use redis::AsyncCommands;
 use std::sync::Arc;
-use rand::RngCore;
 use tracing::warn;
 
 use crate::app_state::AppState;
@@ -108,25 +108,25 @@ pub fn generate_api_key(prefix: &str) -> String {
 pub async fn create_admin_api_key(state: Arc<AppState>) -> Result<String, StatusCode> {
     // Generate a secure key using the admin prefix
     let admin_key = generate_api_key(ADMIN_KEY_FORMAT_PREFIX);
-    
+
     // Get Redis connection
     let mut conn = state
         .redis
         .get_connection_manager()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     // Store admin key with "admin" as the value
     let redis_key = format!("{}{}", API_ADMIN_KEY_PREFIX, admin_key);
     conn.set::<_, _, ()>(&redis_key, "admin")
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     // Add to set of all admin keys for tracking
     conn.sadd::<_, _, ()>(ALL_ADMIN_KEYS, &admin_key)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     Ok(admin_key)
 }
 
@@ -138,36 +138,55 @@ pub async fn admin_keys_exist(state: Arc<AppState>) -> Result<bool, StatusCode> 
         .get_connection_manager()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     // Check if any admin keys exist by checking the cardinality of the set
     let admin_keys_count: usize = conn
         .scard(ALL_ADMIN_KEYS)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    
+
     Ok(admin_keys_count > 0)
 }
 
 /// Bootstraps an admin API key if none exists
 /// Returns a tuple with a boolean (indicating if a new key was created) and optionally the new key
-pub async fn bootstrap_admin_key(state: Arc<AppState>) -> Result<(bool, Option<String>), StatusCode> {
+pub async fn bootstrap_admin_key(
+    state: Arc<AppState>,
+) -> Result<(bool, Option<String>), StatusCode> {
     // Check if any admin keys exist
     let admin_exists = admin_keys_exist(state.clone()).await?;
-    
+
     if !admin_exists {
         // No admin keys exist, create one
         let admin_key = create_admin_api_key(state).await?;
-        
+
         // Log the key prominently
-        warn!("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗");
-        warn!("║                                              INITIAL ADMIN API KEY GENERATED                                              ║");
-        warn!("╠══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣");
-        warn!("║ Use the following key to access the API key management endpoints:                                                         ║");
-        warn!("║ Authorization: {} {}                                                      ║", AUTH_SCHEME, admin_key);
-        warn!("║                                                                                                                           ║");
-        warn!("║ IMPORTANT: Store this key securely! It will not be shown again.                                                           ║");
-        warn!("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝");
-        
+        warn!(
+            "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+        );
+        warn!(
+            "║                                              INITIAL ADMIN API KEY GENERATED                                              ║"
+        );
+        warn!(
+            "╠══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣"
+        );
+        warn!(
+            "║ Use the following key to access the API key management endpoints:                                                         ║"
+        );
+        warn!(
+            "║ Authorization: {} {}                                                      ║",
+            AUTH_SCHEME, admin_key
+        );
+        warn!(
+            "║                                                                                                                           ║"
+        );
+        warn!(
+            "║ IMPORTANT: Store this key securely! It will not be shown again.                                                           ║"
+        );
+        warn!(
+            "╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+        );
+
         Ok((true, Some(admin_key)))
     } else {
         // Admin keys already exist
