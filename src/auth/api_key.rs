@@ -10,7 +10,8 @@ use std::sync::Arc;
 
 use crate::app_state::AppState;
 
-pub const API_KEY_HEADER: &str = "X-API-Key";
+pub const AUTH_HEADER: &str = "Authorization";
+pub const AUTH_SCHEME: &str = "SignalStash";
 pub const API_KEY_PREFIX: &str = "api_key:";
 
 pub async fn validate_api_key(
@@ -18,9 +19,16 @@ pub async fn validate_api_key(
     req: axum::http::Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    // Extract API key from header
-    let api_key = match req.headers().get(API_KEY_HEADER) {
-        Some(key) => key.to_str().map_err(|_| StatusCode::UNAUTHORIZED)?,
+    // Extract API key from Authorization header
+    let auth_header = match req.headers().get(AUTH_HEADER) {
+        Some(header) => header.to_str().map_err(|_| StatusCode::UNAUTHORIZED)?,
+        None => return Err(StatusCode::UNAUTHORIZED),
+    };
+
+    // Parse the header value to extract the API key
+    // Format should be: "SignalStash sk-sigstash-{key}"
+    let api_key = match auth_header.strip_prefix(&format!("{} ", AUTH_SCHEME)) {
+        Some(key) => key,
         None => return Err(StatusCode::UNAUTHORIZED),
     };
 
